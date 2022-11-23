@@ -26,11 +26,13 @@ const initializeDBAndServer = async () => {
 
 initializeDBAndServer();
 
-const statesListDbToResponse = (dbObject) => ({
-  stateId: dbObject.state_id,
-  stateName: dbObject.state_name,
-  population: dbObject.population,
-});
+const statesListDbToResponse = (dbObject) => {
+  return {
+    stateId: dbObject.state_id,
+    stateName: dbObject.state_name,
+    population: dbObject.population,
+  };
+};
 
 const districtListDbToResponse = (dbObject) => ({
   districtId: dbObject.district_id,
@@ -44,12 +46,24 @@ const districtListDbToResponse = (dbObject) => ({
 
 //Get list of state API
 
-app.get("/states", async (request, response) => {
+/*app.get("/states", async (request, response) => {
   const getStatesQuery = `SELECT * FROM state`;
   const statesDbList = await db.all(getStatesQuery);
   const statesList = statesDbList.map((each) => statesListDbToResponse(each));
 
   response.send(statesList);
+});*/
+
+app.get("/states/", async (request, response) => {
+  const getStatesQuery = `
+    SELECT
+      *
+    FROM
+      state;`;
+  const statesArray = await db.all(getStatesQuery);
+  response.send(
+    statesArray.map((eachState) => statesListDbToResponse(eachState))
+  );
 });
 
 //Get details of a state API
@@ -149,7 +163,13 @@ app.get("/states/:stateId/stats/", async (request, response) => {
     WHERE state_id = ${stateId}
     `;
   const dbStats = await db.all(getStatsQuery);
-  response.send(dbStats);
+  const formattedDbStats = {
+    totalCases: dbStats[0].totalCases,
+    totalCured: dbStats[0].totalCured,
+    totalActive: dbStats[0].totalActive,
+    totalDeaths: dbStats[0].totalDeaths,
+  };
+  response.send(formattedDbStats);
 });
 
 //Get district details
